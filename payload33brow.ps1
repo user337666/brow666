@@ -55,9 +55,10 @@ if (Test-Path $filePath) {
 } else {
     try {
         Invoke-WebRequest -Uri $fileUrl -OutFile $filePath -ErrorAction Stop
-        Write-Log "Arquivo baixado em $filePath."
+        Unblock-File $filePath -ErrorAction SilentlyContinue
+        Write-Log "Arquivo baixado e desbloqueado em $filePath."
     } catch {
-        Write-Log "Erro ao baixar arquivo: $_"
+        Write-Log "Erro ao baixar ou desbloquear arquivo: $_"
         exit 1
     }
 }
